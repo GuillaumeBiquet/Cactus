@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using Photon.Pun;
+using Photon.Realtime;
+using ExitGames.Client.Photon;
 
-public class DeckManager : MonoBehaviour
+public class DeckManager : MonoBehaviourPunCallbacks
 {
 
     private static DeckManager instance;
@@ -70,15 +73,17 @@ public class DeckManager : MonoBehaviour
 
     public void DrawCard()
     {
-        if (cards.Count < 1)
-        {
-            Debug.Log("deck is empty");
+        if (cards.Count == 0 && !photonView.IsMine && !RoomManager.Instance.IsMyTurn()) {
             return;
         }
-
-        Card cardToDraw = cards.Last();
-        GameManager.Instance.player.DrawCard(cardToDraw);
-        cards.Remove(cardToDraw);
+        object[] data = null;
+        PhotonNetwork.RaiseEvent(RoomManager.DRAW_CARD_FROM_DECK, data, new RaiseEventOptions { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
     }
 
+    public void DrawTopCard()
+    {
+        Card cardToDraw = cards.Last();
+        RoomManager.Instance.CurrentPlayer.DrawCard(cardToDraw);
+        cards.Remove(cardToDraw);
+    }
 }

@@ -56,7 +56,7 @@ public class DiscardPileManager : MonoBehaviour, IDropHandler
         }
 
         Card cardToDraw = discardCards.Last();
-        GameManager.Instance.player.DrawCard(cardToDraw);
+        RoomManager.Instance.CurrentPlayer.DrawCard(cardToDraw);
         discardCards.Remove(cardToDraw);
 
         UpdatePileImage();

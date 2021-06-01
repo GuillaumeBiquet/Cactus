@@ -17,7 +17,7 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     public void OnBeginDrag(PointerEventData eventData)
     {
         parentToReturnTo = transform.parent;
-        transform.SetParent(GameManager.Instance.canvas.transform);
+        transform.SetParent(GameManager.Instance.Canvas.transform);
         canvasGroup.blocksRaycasts = false;
     }
 
