@@ -5,19 +5,22 @@ using System.Linq;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using TMPro;
 
-public class DeckManager : MonoBehaviourPunCallbacks
+public class DeckManager : MonoBehaviourPunCallbacks //, IPunObservable
 {
 
     private static DeckManager instance;
     public static DeckManager Instance { get { return instance; } }
 
-
     [SerializeField] Sprite[] cardsSprite;
     [SerializeField] Sprite backOfCardSprite;
-    [SerializeField] GameObject cardPrefab;
+    [SerializeField] TMP_Text deckText;
 
-    private List<Card> cards = new List<Card>();
+    private List<Card> allCards = new List<Card>();
+    private List<Card> deckOfCard = new List<Card>();
+
+    private static System.Random random = new System.Random();
 
 
     void Awake()
@@ -30,24 +33,19 @@ public class DeckManager : MonoBehaviourPunCallbacks
         {
             instance = this;
         }
-    }
 
-    // Start is called before the first frame update
-    void Start()
-    {
         CardType cardType = CardType.HEART;
         int cardValue = 0;
         Card card;
-        Vector3 offset = Vector3.zero;
-   
         for (int i = 0; i < 52; i++)
         {
-            offset.z += 0.1f;
             cardType = GetCardType(i);
             cardValue = i + 1;
-            card = new Card(cardValue % 13, cardType, cardsSprite[i], backOfCardSprite);
-            cards.Add(card);
+            card = new Card(i, cardValue % 14, cardType, cardsSprite[i], backOfCardSprite);
+            allCards.Add(card);
         }
+        deckOfCard = new List<Card>(allCards);
+
     }
 
 
@@ -71,19 +69,90 @@ public class DeckManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public void DrawCard()
+    public void DrawCardEvent()
     {
-        if (cards.Count == 0 && !photonView.IsMine && !RoomManager.Instance.IsMyTurn()) {
+        if (deckOfCard.Count == 0 && !photonView.IsMine ) {
             return;
         }
-        object[] data = null;
-        PhotonNetwork.RaiseEvent(RoomManager.DRAW_CARD_FROM_DECK, data, new RaiseEventOptions { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
+
+        if (!RoomManager.Instance.IsMyTurn())
+        {
+            Debug.LogError("Not my turn");
+            return;
+        }
+
+        // send event to everyone but me
+        PhotonNetwork.RaiseEvent(RoomManager.DRAW_CARD_FROM_DECK, null, RaiseEventOptions.Default, SendOptions.SendReliable);
+
+        DrawTopCard();
     }
+
+    public void ShuffleDeck()
+    {
+        int n = deckOfCard.Count;
+        int nbrOfSuffle = 3;
+        while (nbrOfSuffle > 0)
+        {
+            while (n > 1)
+            {
+                n--;
+                int k = random.Next(n + 1);
+                Card value = deckOfCard[k];
+                deckOfCard[k] = deckOfCard[n];
+                deckOfCard[n] = value;
+            }
+            nbrOfSuffle--;
+        }
+
+
+        object[] data = new object[] { ListOfCardsToArrayOfIndex(deckOfCard) };
+        // send deck to everyone exept me (master)
+        PhotonNetwork.RaiseEvent(RoomManager.SET_UP_DECK, data, RaiseEventOptions.Default, SendOptions.SendReliable);
+
+    }
+
+    public void SetUpDeck(object[] data)
+    {
+        deckOfCard = ArrayOfIndexToListOfCards( (int[]) data[0] );
+    }
+
 
     public void DrawTopCard()
     {
-        Card cardToDraw = cards.Last();
+        Card cardToDraw = deckOfCard.Last();
         RoomManager.Instance.CurrentPlayer.DrawCard(cardToDraw);
-        cards.Remove(cardToDraw);
+        deckOfCard.Remove(cardToDraw);
+    }
+
+    /*public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.IsWriting)
+        {
+            stream.SendNext(ListOfCardsToArrayOfIndex(deckOfCard));
+        }
+        else if (stream.IsReading)
+        {
+            deckOfCard = ArrayOfIndexToListOfCards((int[])stream.ReceiveNext());
+        }
+    }*/
+
+    int[] ListOfCardsToArrayOfIndex(List<Card> cards)
+    {
+        int[] indexes = new int[cards.Count];
+        for(int i=0; i < cards.Count; i++)
+        {
+            indexes[i] = cards[i].Index;
+        }
+        return indexes;
+    }
+
+    List<Card> ArrayOfIndexToListOfCards(int[] indexes)
+    {
+        List<Card> cards = new List<Card>();
+        for (int i = 0; i < indexes.Length; i++)
+        {
+            cards.Add( allCards[indexes[i]] );
+        }
+        return cards;
     }
 }

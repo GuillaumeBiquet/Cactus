@@ -30,7 +30,6 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        Debug.Log("end");
         transform.SetParent(parentToReturnTo);
         canvasGroup.blocksRaycasts = true;
 

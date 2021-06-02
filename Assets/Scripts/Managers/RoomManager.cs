@@ -1,7 +1,9 @@
 using ExitGames.Client.Photon;
 using Photon.Pun;
+using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class RoomManager : MonoBehaviour
@@ -12,6 +14,7 @@ public class RoomManager : MonoBehaviour
     public const byte END_PLAYER_TURN = 1;
     public const byte DRAW_CARD_FROM_DECK = 2;
     public const byte PLAY_CARD = 3;
+    public const byte SET_UP_DECK = 4;
 
     List<Player> players = new List<Player>();
 
@@ -54,6 +57,10 @@ public class RoomManager : MonoBehaviour
         {
             DeckManager.Instance.DrawTopCard();
         }
+        else if (eventCode == SET_UP_DECK)
+        {
+            DeckManager.Instance.SetUpDeck( (object[]) eventData.CustomData );
+        }
     }
 
     void EndTurn()
@@ -72,11 +79,15 @@ public class RoomManager : MonoBehaviour
         return CurrentPlayer.PhotonPlayer == PhotonNetwork.LocalPlayer;
     }
 
-    public void AddPlayer(Player player)
+
+    public void SetUpPlayerList()
     {
-        players.Add(player);
+        foreach (PhotonPlayer photonPlayer in PhotonNetwork.PlayerList)
+        {
+            GameObject p = (GameObject) photonPlayer.TagObject;
+            Debug.LogError("go name = " + p.name);
+            players.Add(p.GetComponent<Player>());
+        }
     }
-
-
 
 }

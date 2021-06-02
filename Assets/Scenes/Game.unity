@@ -342,6 +342,7 @@ GameObject:
   m_Component:
   - component: {fileID: 213910307}
   - component: {fileID: 213910308}
+  - component: {fileID: 213910309}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -383,6 +384,28 @@ MonoBehaviour:
   - {fileID: 1176565003}
   CardPrefab: {fileID: 1452879864076188543, guid: 25cb6706bd1bdce45a3fedd77d2a9671, type: 3}
   Canvas: {fileID: 1166656601}
+--- !u!114 &213910309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 213910306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 1
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &233374363
 GameObject:
   m_ObjectHideFlags: 0
@@ -859,7 +882,7 @@ MonoBehaviour:
   - {fileID: -3978956660203194776, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
   - {fileID: 8971195533914883617, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
   backOfCardSprite: {fileID: 7225193009496767498, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  cardPrefab: {fileID: 612455573836197264, guid: e2b64b51a9a3555419091dfa3c004df4, type: 3}
+  deckText: {fileID: 0}
 --- !u!212 &1121009188
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1434,6 +1457,7 @@ GameObject:
   - component: {fileID: 2134405633}
   - component: {fileID: 2134405632}
   - component: {fileID: 2134405635}
+  - component: {fileID: 2134405636}
   m_Layer: 5
   m_Name: Deck
   m_TagString: Untagged
@@ -1506,7 +1530,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2134405635}
         m_TargetAssemblyTypeName: DeckManager, Assembly-CSharp
-        m_MethodName: DrawCard
+        m_MethodName: DrawCardEvent
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1620,4 +1644,26 @@ MonoBehaviour:
   - {fileID: -3978956660203194776, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
   - {fileID: 8971195533914883617, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
   backOfCardSprite: {fileID: 7225193009496767498, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  cardPrefab: {fileID: 612455573836197264, guid: e2b64b51a9a3555419091dfa3c004df4, type: 3}
+  deckText: {fileID: 0}
+--- !u!114 &2134405636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2134405630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 2
+  InstantiationId: 0
+  isRuntimeInstantiated: 0

@@ -17,7 +17,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] public GameObject CardPrefab;
     [SerializeField] public Canvas Canvas;
 
-    public List<PlayerHand> PlayerHands { get { return playerHands; } }
+    public static List<PlayerHand> PlayerHands;
+    public static int NumberOfInstantiatedPlayer = 0;
 
 
     void Awake()
@@ -30,6 +31,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             instance = this;
         }
+
+        PlayerHands = new List<PlayerHand>(playerHands);
     }
 
     // Start is called before the first frame update
@@ -45,23 +48,37 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         if (Player.LocalPlayerInstance == null)
         {
-
-
             // we're in a room. spawn a character for the local player. it gets synced by using PhotonNetwork.Instantiate
             Player player = PhotonNetwork.Instantiate(playerPrefab.name, Vector3.zero, Quaternion.identity).GetComponent<Player>();
-
-            PlayerHand playerHand = playerHands.Last();
-            player.Hand = playerHand;
-            playerHand.Player = player;
-            playerHand.gameObject.SetActive(true);
-            playerHands.Remove(playerHand);
-
-            RoomManager.Instance.AddPlayer(player);
         }
-        else
+
+        //is Master
+        if (PhotonNetwork.IsMasterClient)
         {
-            Debug.LogFormat("Ignoring scene load for {0}", SceneManagerHelper.ActiveSceneName);
+            // suffle deck
+            DeckManager.Instance.ShuffleDeck();
+        }
+
+        StartCoroutine( WaitUntilAllPlayersAreInstantiated() );
+
+
+    }
+
+    IEnumerator WaitUntilAllPlayersAreInstantiated()
+    {
+        yield return new WaitUntil(() => NumberOfInstantiatedPlayer == PhotonNetwork.CurrentRoom.PlayerCount);
+        Debug.LogError("n = " + NumberOfInstantiatedPlayer + " / n = " + PhotonNetwork.CurrentRoom.PlayerCount);
+
+        yield return new WaitForEndOfFrame();
+
+        RoomManager.Instance.SetUpPlayerList();
+
+        foreach(Player player in RoomManager.Instance.Players)
+        {          
+            player.SetUpHand(PlayerHands.Last());
+            PlayerHands.Remove(PlayerHands.Last());
         }
 
     }
+
 }

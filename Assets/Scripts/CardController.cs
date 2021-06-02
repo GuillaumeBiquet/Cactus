@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Photon.Pun;
+using Photon.Realtime;
 
-public class CardController : MonoBehaviour
+public class CardController : MonoBehaviourPunCallbacks, IPunObservable
 {
 
 
@@ -14,11 +16,22 @@ public class CardController : MonoBehaviour
     Card card;
     public Card Card { get { return card; } }
 
-    public void SetUp(Card _card)
+    private Player owner;
+
+    public void SetUp(Card _card, Player player)
     {
         card = _card;
         image.sprite = card.Front;
         this.gameObject.name = "CARD_" + card.Type + "_" + card.Value;
+        owner = player;
+
+        PhotonNetwork.AllocateViewID(photonView);
+        Debug.LogError(photonView.ViewID);
+        if (owner.photonView.IsMine)
+        {
+            photonView.TransferOwnership(owner.PhotonPlayer);
+        }
+
     }
 
     void Update()
@@ -35,6 +48,20 @@ public class CardController : MonoBehaviour
             isFlipped = false;
         }
 
+    }
+
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+
+        if (stream.IsWriting)
+        {
+            stream.SendNext(transform.position);
+        }
+        else if (stream.IsReading)
+        {
+            transform.position = (Vector3)stream.ReceiveNext();
+        }
     }
 
 }
