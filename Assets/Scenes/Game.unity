@@ -325,7 +325,7 @@ RectTransform:
   - {fileID: 1809400883}
   - {fileID: 1706318062}
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -342,7 +342,6 @@ GameObject:
   m_Component:
   - component: {fileID: 213910307}
   - component: {fileID: 213910308}
-  - component: {fileID: 213910309}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -382,30 +381,6 @@ MonoBehaviour:
   - {fileID: 233374366}
   - {fileID: 942286559}
   - {fileID: 1176565003}
-  CardPrefab: {fileID: 1452879864076188543, guid: 25cb6706bd1bdce45a3fedd77d2a9671, type: 3}
-  Canvas: {fileID: 1166656601}
---- !u!114 &213910309
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 213910306}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ObservedComponentsFoldoutOpen: 1
-  Group: 0
-  prefixField: -1
-  Synchronization: 3
-  OwnershipTransfer: 0
-  observableSearch: 2
-  ObservedComponents: []
-  sceneViewId: 1
-  InstantiationId: 0
-  isRuntimeInstantiated: 0
 --- !u!1 &233374363
 GameObject:
   m_ObjectHideFlags: 0
@@ -560,7 +535,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &775026895
 GameObject:
@@ -814,7 +789,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1121009187
 MonoBehaviour:
@@ -828,61 +803,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a4950735099371408c3985f81879731, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardsSprite:
-  - {fileID: -1535244524692844915, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -6595781994077090958, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -7709040272094715751, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8002119216224854869, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -8597738847345059004, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -1762899490127655764, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -5483608749270851397, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -299258118475828617, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1287477335644201787, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 9138478252050595607, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 3498103547527549379, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -2905558514409974660, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1704082628835227883, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -7733743142069244911, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5466358583426109798, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -6531438337539286634, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5108746832893246654, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1834547135466191316, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -5892645596774105255, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 2536981172073748883, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -6976312399419530836, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8972821770460227603, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -7873867098201456254, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8546098440679624361, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -6259575037450742600, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -5629551069344004242, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5389238820240882804, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 659046735627377108, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 2041332794081832404, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 987224590173998692, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 4843414572028866387, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1643134627994013614, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -7789761996989939200, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8381280752204152853, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8365328819036124340, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1736256657205141101, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -1554706614796760067, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 6622807587235977615, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8006835533354258308, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -3518169887475478178, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -1432889945774224704, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -1639799043813891702, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -2272721608834117857, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 264777423523733670, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5949856349481144707, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -129039881323564314, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5722153545295331252, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 7881601550259347632, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1888704447278586260, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -5707941539380000155, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -3978956660203194776, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8971195533914883617, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  backOfCardSprite: {fileID: 7225193009496767498, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  deckText: {fileID: 0}
+  deckGFX: {fileID: 0}
+  cardPrefab: {fileID: 0}
 --- !u!212 &1121009188
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1059,7 +981,7 @@ RectTransform:
   - {fileID: 1176565001}
   - {fileID: 198594832}
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -1305,49 +1227,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1 &2035668248
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2035668250}
-  - component: {fileID: 2035668249}
-  m_Layer: 0
-  m_Name: RoomManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &2035668249
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2035668248}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c0a958b96de51114298262f37b504def, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &2035668250
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2035668248}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.6295269, z: 90}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2125467087
 GameObject:
   m_ObjectHideFlags: 0
@@ -1442,7 +1321,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2134405630
 GameObject:
@@ -1457,7 +1336,6 @@ GameObject:
   - component: {fileID: 2134405633}
   - component: {fileID: 2134405632}
   - component: {fileID: 2134405635}
-  - component: {fileID: 2134405636}
   m_Layer: 5
   m_Name: Deck
   m_TagString: Untagged
@@ -1530,7 +1408,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2134405635}
         m_TargetAssemblyTypeName: DeckManager, Assembly-CSharp
-        m_MethodName: DrawCardEvent
+        m_MethodName: InstantiateCard
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1590,80 +1468,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a4950735099371408c3985f81879731, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardsSprite:
-  - {fileID: -1535244524692844915, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -6595781994077090958, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -7709040272094715751, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8002119216224854869, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -8597738847345059004, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -1762899490127655764, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -5483608749270851397, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -299258118475828617, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1287477335644201787, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 9138478252050595607, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 3498103547527549379, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -2905558514409974660, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1704082628835227883, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -7733743142069244911, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5466358583426109798, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -6531438337539286634, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5108746832893246654, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1834547135466191316, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -5892645596774105255, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 2536981172073748883, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -6976312399419530836, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8972821770460227603, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -7873867098201456254, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8546098440679624361, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -6259575037450742600, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -5629551069344004242, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5389238820240882804, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 659046735627377108, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 2041332794081832404, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 987224590173998692, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 4843414572028866387, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1643134627994013614, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -7789761996989939200, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8381280752204152853, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8365328819036124340, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1736256657205141101, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -1554706614796760067, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 6622807587235977615, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8006835533354258308, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -3518169887475478178, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -1432889945774224704, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -1639799043813891702, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -2272721608834117857, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 264777423523733670, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5949856349481144707, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -129039881323564314, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 5722153545295331252, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 7881601550259347632, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 1888704447278586260, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -5707941539380000155, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: -3978956660203194776, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  - {fileID: 8971195533914883617, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  backOfCardSprite: {fileID: 7225193009496767498, guid: 15e99862b104978449c0ca134bd7051a, type: 3}
-  deckText: {fileID: 0}
---- !u!114 &2134405636
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2134405630}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ObservedComponentsFoldoutOpen: 1
-  Group: 0
-  prefixField: -1
-  Synchronization: 3
-  OwnershipTransfer: 0
-  observableSearch: 2
-  ObservedComponents: []
-  sceneViewId: 2
-  InstantiationId: 0
-  isRuntimeInstantiated: 0
+  deckGFX: {fileID: 11400000, guid: ea0b33d0dffdcbc4c9b5119e2c156440, type: 2}
+  cardPrefab: {fileID: 1452879864076188543, guid: 25cb6706bd1bdce45a3fedd77d2a9671, type: 3}

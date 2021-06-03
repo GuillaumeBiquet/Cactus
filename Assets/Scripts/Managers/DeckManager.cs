@@ -5,20 +5,20 @@ using System.Linq;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
-using TMPro;
 
-public class DeckManager : MonoBehaviourPunCallbacks //, IPunObservable
+public class DeckManager : MonoBehaviour
 {
+
+
 
     private static DeckManager instance;
     public static DeckManager Instance { get { return instance; } }
 
-    [SerializeField] Sprite[] cardsSprite;
-    [SerializeField] Sprite backOfCardSprite;
-    [SerializeField] TMP_Text deckText;
+    [SerializeField] DeckOfCard deckGFX;
+    [SerializeField] GameObject cardPrefab;
 
     private List<Card> allCards = new List<Card>();
-    private List<Card> deckOfCard = new List<Card>();
+    private List<Card> deck = new List<Card>();
 
     private static System.Random random = new System.Random();
 
@@ -41,10 +41,12 @@ public class DeckManager : MonoBehaviourPunCallbacks //, IPunObservable
         {
             cardType = GetCardType(i);
             cardValue = i + 1;
-            card = new Card(i, cardValue % 14, cardType, cardsSprite[i], backOfCardSprite);
+            card = new Card(i, cardValue % 14, cardType, deckGFX.CardsSprite[i], deckGFX.BackOfCardSprite);
             allCards.Add(card);
         }
-        deckOfCard = new List<Card>(allCards);
+        deck = new List<Card>(allCards);
+
+        GetComponent<SpriteRenderer>().sprite = deckGFX.BackOfCardSprite;
 
     }
 
@@ -69,27 +71,10 @@ public class DeckManager : MonoBehaviourPunCallbacks //, IPunObservable
         }
     }
 
-    public void DrawCardEvent()
-    {
-        if (deckOfCard.Count == 0 && !photonView.IsMine ) {
-            return;
-        }
-
-        if (!RoomManager.Instance.IsMyTurn())
-        {
-            Debug.LogError("Not my turn");
-            return;
-        }
-
-        // send event to everyone but me
-        PhotonNetwork.RaiseEvent(RoomManager.DRAW_CARD_FROM_DECK, null, RaiseEventOptions.Default, SendOptions.SendReliable);
-
-        DrawTopCard();
-    }
 
     public void ShuffleDeck()
     {
-        int n = deckOfCard.Count;
+        int n = deck.Count;
         int nbrOfSuffle = 3;
         while (nbrOfSuffle > 0)
         {
@@ -97,44 +82,66 @@ public class DeckManager : MonoBehaviourPunCallbacks //, IPunObservable
             {
                 n--;
                 int k = random.Next(n + 1);
-                Card value = deckOfCard[k];
-                deckOfCard[k] = deckOfCard[n];
-                deckOfCard[n] = value;
+                Card value = deck[k];
+                deck[k] = deck[n];
+                deck[n] = value;
             }
             nbrOfSuffle--;
         }
 
 
-        object[] data = new object[] { ListOfCardsToArrayOfIndex(deckOfCard) };
+        object[] data = new object[] { ListOfCardsToArrayOfIndex(deck) };
         // send deck to everyone exept me (master)
-        PhotonNetwork.RaiseEvent(RoomManager.SET_UP_DECK, data, RaiseEventOptions.Default, SendOptions.SendReliable);
+        PhotonNetwork.RaiseEvent(EventCode.SET_UP_DECK, data, RaiseEventOptions.Default, SendOptions.SendReliable);
 
     }
 
     public void SetUpDeck(object[] data)
     {
-        deckOfCard = ArrayOfIndexToListOfCards( (int[]) data[0] );
+        deck = ArrayOfIndexToListOfCards( (int[]) data[0] );
     }
 
 
-    public void DrawTopCard()
+    private void OnMouseDown()
     {
-        Card cardToDraw = deckOfCard.Last();
-        RoomManager.Instance.CurrentPlayer.DrawCard(cardToDraw);
-        deckOfCard.Remove(cardToDraw);
+        InstantiateCard();
     }
 
-    /*public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    public void InstantiateCard()
     {
-        if (stream.IsWriting)
+        if (deck.Count == 0)
         {
-            stream.SendNext(ListOfCardsToArrayOfIndex(deckOfCard));
+            Debug.LogError("No cards left");
+            return;
         }
-        else if (stream.IsReading)
+
+        if (!GameManager.Instance.IsMyTurn())
         {
-            deckOfCard = ArrayOfIndexToListOfCards((int[])stream.ReceiveNext());
+            Debug.LogError("Not my turn");
+            return;
         }
-    }*/
+
+        // send event to everyone but me
+        //PhotonNetwork.RaiseEvent(RoomManager.DRAW_CARD_FROM_DECK, null, RaiseEventOptions.Default, SendOptions.SendReliable);
+        //DrawTopCard();
+
+        object[] data = new object[] { EventCode.DRAW_CARD_FROM_DECK };
+        PhotonNetwork.Instantiate(cardPrefab.name, Vector3.zero, Quaternion.identity, 0, data);
+    }
+
+    public Card DrawTopCard()
+    {
+        Card cardToDraw = deck.Last();
+        deck.Remove(cardToDraw);
+        return cardToDraw;
+    }
+
+
+    public Card GetCardByIndex(int index)
+    {
+        return allCards[index];
+    }
+
 
     int[] ListOfCardsToArrayOfIndex(List<Card> cards)
     {

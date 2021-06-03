@@ -18,6 +18,7 @@ public class Player: MonoBehaviourPunCallbacks, IPunInstantiateMagicCallback
     public static GameObject LocalPlayerInstance;
     public PhotonPlayer PhotonPlayer { get { return photonPlayer; } }
     public PlayerHand Hand { get { return hand; } set { hand = value; } }
+    public List<Card> Cards { get { return cards; } }
 
     /*public delegate void OnCardsChangedDelegate();
     public OnCardsChangedDelegate onCardsChangedCallback;*/
@@ -48,29 +49,17 @@ public class Player: MonoBehaviourPunCallbacks, IPunInstantiateMagicCallback
         GameManager.NumberOfInstantiatedPlayer++;
     }
 
-    public void DrawCard(Card card)
+    public void AddCard(Card card)
     {
         cards.Add(card);
-
-        CardController cardController = Instantiate(GameManager.Instance.CardPrefab, hand.transform).GetComponent<CardController>();
-        cardController.gameObject.name = card.Value + "_" + card.Type;
-
-        if (!photonView.IsMine)
-        {
-            cardController.GetComponent<Draggable>().enabled = false;
-        }
-
-        cardController.SetUp(card, this);
-        FinishTurn();
+        hand.UpdateCardsPosition(cards);
+        GameManager.Instance.EndTurn();
     }
 
-    public void FinishTurn()
+    public void RemoveCard(Card card)
     {
-        if(!photonView.IsMine || !RoomManager.Instance.IsMyTurn()) {
-            return;
-        }
-        object[] data = null;
-        PhotonNetwork.RaiseEvent(RoomManager.END_PLAYER_TURN, data, new RaiseEventOptions { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
+        cards.Remove(card);
+        hand.UpdateCardsPosition(cards);
     }
 
     public void SetUpHand(PlayerHand _hand)
