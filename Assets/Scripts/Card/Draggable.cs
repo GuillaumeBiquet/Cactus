@@ -12,12 +12,14 @@ public class Draggable : MonoBehaviour
     Vector3 mousePos = Vector3.zero;
 
     PhotonView photonView;
+    CardController cardController;
 
     bool isOnDiscardPile = false;
 
     private void Awake()
     {
         photonView = this.GetComponent<PhotonView>();
+        cardController = this.GetComponent<CardController>();
     }
 
     void OnMouseDown()
@@ -25,7 +27,15 @@ public class Draggable : MonoBehaviour
         if (!enabled)
             return;
 
-        positionToReturnTo = transform.position;
+        if( GameManager.GameState == GameState.ReplaceCardPhase)
+        {
+            ReplaceCardEvent();
+            DiscardCardEvent();
+        }
+        else
+        {
+            positionToReturnTo = transform.position;
+        }
     }
 
     void OnMouseDrag()
@@ -45,11 +55,7 @@ public class Draggable : MonoBehaviour
 
         if (isOnDiscardPile)
         {
-            object[] data = new object[] { photonView.ViewID };
-            // send deck to everyone exept me (master)
-            PhotonNetwork.RaiseEvent(EventCode.DISCARD_CARD, data, RaiseEventOptions.Default, SendOptions.SendReliable);
-
-            DiscardPileManager.Instance.Discard(this.GetComponent<CardController>());
+            DiscardCardEvent();
         }
         else
         {
@@ -73,4 +79,20 @@ public class Draggable : MonoBehaviour
         }
     }
 
+    void DiscardCardEvent()
+    {
+        object[] data = new object[] { photonView.ViewID };
+        // send deck to everyone exept me (master)
+        PhotonNetwork.RaiseEvent(EventCode.DISCARD_CARD, data, RaiseEventOptions.Default, SendOptions.SendReliable);
+        DiscardPileManager.Instance.Discard(this.GetComponent<CardController>());
+    }
+
+
+    void ReplaceCardEvent()
+    {
+        object[] data = new object[] { photonView.ViewID };
+        // send deck to everyone exept me (master)
+        PhotonNetwork.RaiseEvent(EventCode.REPLACE_CARD, data, RaiseEventOptions.Default, SendOptions.SendReliable);
+        GameManager.Instance.CurrentPlayer.ReplaceCard(cardController, GameManager.Instance.CardDrawn);
+    }
 }

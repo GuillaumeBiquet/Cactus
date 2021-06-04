@@ -18,8 +18,6 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
     Draggable draggableComponent;
 
     public Card Card { get { return card; } }
-    public Player Owner { get { return owner; } }
-
 
     public void OnPhotonInstantiate(PhotonMessageInfo info)
     {
@@ -27,11 +25,7 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
         photonView = this.GetComponent<PhotonView>();
         draggableComponent = this.GetComponent<Draggable>();
 
-        object[] instantiationData = info.photonView.InstantiationData;
-        byte eventCode = (byte)instantiationData[0];
-
-        owner = GameManager.Instance.CurrentPlayer;
-
+        byte eventCode = (byte) info.photonView.InstantiationData[0];
         if(eventCode == EventCode.DRAW_CARD_FROM_DECK)
         {
             card = DeckManager.Instance.DrawTopCard();
@@ -41,13 +35,19 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
             card = DiscardPileManager.Instance.DrawTopCard();
         }
 
-        card.CardController = this;
-        GameManager.Instance.CurrentPlayer.AddCard(card);
         spriteRenderer.sprite = card.Front;
-        this.transform.SetParent(owner.Hand.transform, false);
+        draggableComponent.enabled = false;
         this.gameObject.name = "CARD_" + card.Type + "_" + card.Value;
 
-        draggableComponent.enabled = photonView.IsMine;
+
+        if (GameManager.GameState == GameState.DristibutingPhase)
+        {
+            GameManager.Instance.CurrentPlayer.AddCard(this);
+        }
+        else
+        {
+            GameManager.Instance.SetCardDrawn(this);
+        }
 
     }
 
@@ -68,10 +68,43 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
 
     }
 
+
+    public void SetUpOwner(Player player)
+    {
+        draggableComponent.enabled = photonView.IsMine;
+        transform.SetParent(player.Hand.transform, false);
+        owner = player;
+    }
+
     public void DestroySelf()
     {
-        owner.RemoveCard(this.card);
+        owner.RemoveCard(this);
         Destroy(this.gameObject);
     }
 
+
+    public void Effect()
+    {
+        if (card.Value == 7 || card.Value == 8)
+        {
+            Debug.LogError("Play 7, 8");
+        }
+        else if (card.Value == 9 || card.Value == 10)
+        {
+            Debug.LogError("Play 9, 10");
+        }
+        else if (card.Value == 11 || card.Value == 12)
+        {
+            Debug.LogError("Play Valet, Dame");
+        }
+        else if (card.Value == 13 && (card.Type == CardType.SPADE || card.Type == CardType.CLUB))
+        {
+            Debug.LogError("Play black king");
+        }
+        else
+        {
+            Debug.LogError("No effect");
+        }
+        GameManager.Instance.EndTurn();
+    }
 }

@@ -8,45 +8,35 @@ using ExitGames.Client.Photon;
 
 public class DeckManager : MonoBehaviour
 {
-
-
-
     private static DeckManager instance;
     public static DeckManager Instance { get { return instance; } }
 
     [SerializeField] DeckOfCard deckGFX;
-    [SerializeField] GameObject cardPrefab;
 
-    private List<Card> allCards = new List<Card>();
-    private List<Card> deck = new List<Card>();
+    List<Card> allCards = new List<Card>();
+    List<Card> deck = new List<Card>();
+    SpriteRenderer spriteRenderer;
 
     private static System.Random random = new System.Random();
 
-
     void Awake()
     {
-        if (instance != null && instance != this)
-        {
+        if (instance != null && instance != this) {
             Destroy(this.gameObject);
-        }
-        else
-        {
+        } else {
             instance = this;
         }
 
-        CardType cardType = CardType.HEART;
-        int cardValue = 0;
         Card card;
         for (int i = 0; i < 52; i++)
         {
-            cardType = GetCardType(i);
-            cardValue = i + 1;
-            card = new Card(i, cardValue % 14, cardType, deckGFX.CardsSprite[i], deckGFX.BackOfCardSprite);
+            card = new Card(i, (i % 13) + 1, GetCardType(i), deckGFX.CardsSprite[i], deckGFX.BackOfCardSprite);
             allCards.Add(card);
         }
         deck = new List<Card>(allCards);
 
-        GetComponent<SpriteRenderer>().sprite = deckGFX.BackOfCardSprite;
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = deckGFX.BackOfCardSprite;
 
     }
 
@@ -104,14 +94,9 @@ public class DeckManager : MonoBehaviour
 
     private void OnMouseDown()
     {
-        InstantiateCard();
-    }
-
-    public void InstantiateCard()
-    {
-        if (deck.Count == 0)
+        if (GameManager.GameState != GameState.DrawingPhase)
         {
-            Debug.LogError("No cards left");
+            Debug.LogError("Not the drawing phase");
             return;
         }
 
@@ -121,25 +106,22 @@ public class DeckManager : MonoBehaviour
             return;
         }
 
-        // send event to everyone but me
-        //PhotonNetwork.RaiseEvent(RoomManager.DRAW_CARD_FROM_DECK, null, RaiseEventOptions.Default, SendOptions.SendReliable);
-        //DrawTopCard();
+        if (deck.Count == 0)
+        {
+            Debug.LogError("No cards left");
+            return;
+        }
 
-        object[] data = new object[] { EventCode.DRAW_CARD_FROM_DECK };
-        PhotonNetwork.Instantiate(cardPrefab.name, Vector3.zero, Quaternion.identity, 0, data);
+        GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DECK, transform.position);
     }
+
+
 
     public Card DrawTopCard()
     {
         Card cardToDraw = deck.Last();
         deck.Remove(cardToDraw);
         return cardToDraw;
-    }
-
-
-    public Card GetCardByIndex(int index)
-    {
-        return allCards[index];
     }
 
 

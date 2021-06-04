@@ -15,8 +15,6 @@ public class DiscardPileManager : MonoBehaviour
     SpriteRenderer spriteRenderer;
     Sprite defaultSprite;
 
-    [SerializeField] GameObject cardPrefab;
-
     void Awake()
     {
         if (instance != null && instance != this)
@@ -44,13 +42,16 @@ public class DiscardPileManager : MonoBehaviour
         discardedCards.Add(discardedCard);
         cardController.DestroySelf();
 
+        GameManager.GameState = GameState.PlayCardEffectPhase;
+        cardController.Effect();
+
         // if normal discard
-            // play card
-            // end turn
+        // play card
+        // end turn
 
         // else if quick discard 
-            //Check if same value as previous discarded card and play effect
-            //if not punish player and put card back
+        //Check if same value as previous discarded card and play effect
+        //if not punish player and put card back
 
         UpdatePileImage();
     }
@@ -75,11 +76,12 @@ public class DiscardPileManager : MonoBehaviour
         return cardToDraw;
     }
 
+
     private void OnMouseDown()
     {
-        if (discardedCards.Count == 0)
+        if (GameManager.GameState != GameState.DrawingPhase)
         {
-            Debug.LogError("Discard pile is empty");
+            Debug.LogError("Not the drawing phase");
             return;
         }
 
@@ -89,8 +91,13 @@ public class DiscardPileManager : MonoBehaviour
             return;
         }
 
-        object[] data = new object[] { EventCode.DRAW_CARD_FROM_DISCARD_PILE };
-        PhotonNetwork.Instantiate(cardPrefab.name, Vector3.zero, Quaternion.identity, 0, data);
+        if (discardedCards.Count == 0)
+        {
+            Debug.LogError("Discard pile is empty");
+            return;
+        }
+
+        GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DISCARD_PILE, transform.position);
 
     }
 

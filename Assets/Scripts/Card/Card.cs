@@ -23,7 +23,6 @@ public class Card
     public CardType Type { get { return type; } }
     public Sprite Front { get { return front; } }
     public Sprite Back { get { return back; } }
-    public CardController CardController { get { return cardController; } set { cardController = value; } }
 
 
     public Card(int _index, int _value, CardType _type, Sprite _front, Sprite _back) 

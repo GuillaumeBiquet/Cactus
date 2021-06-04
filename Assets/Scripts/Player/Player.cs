@@ -10,18 +10,16 @@ using System.Linq;
 public class Player: MonoBehaviourPunCallbacks, IPunInstantiateMagicCallback
 {
 
-    [SerializeField] List<Card> cards = new List<Card>();
-    PlayerHand hand;
+    List<CardController> cards = new List<CardController>();
+    [SerializeField] PlayerHand hand;
+    [SerializeField] PlayerUi ui;
     PhotonPlayer photonPlayer;
 
 
     public static GameObject LocalPlayerInstance;
     public PhotonPlayer PhotonPlayer { get { return photonPlayer; } }
     public PlayerHand Hand { get { return hand; } set { hand = value; } }
-    public List<Card> Cards { get { return cards; } }
-
-    /*public delegate void OnCardsChangedDelegate();
-    public OnCardsChangedDelegate onCardsChangedCallback;*/
+    public List<CardController> Cards { get { return cards; } }
 
 
     void Awake()
@@ -35,10 +33,6 @@ public class Player: MonoBehaviourPunCallbacks, IPunInstantiateMagicCallback
         DontDestroyOnLoad(this.gameObject);
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
 
     public void OnPhotonInstantiate(PhotonMessageInfo info)
     {
@@ -46,27 +40,34 @@ public class Player: MonoBehaviourPunCallbacks, IPunInstantiateMagicCallback
         info.Sender.TagObject = this.gameObject;
         photonPlayer = info.Sender;
         gameObject.name = photonPlayer.NickName;
+
+        ui.SetTarget(this);
+
         GameManager.NumberOfInstantiatedPlayer++;
     }
 
-    public void AddCard(Card card)
+    public void AddCard(CardController cardController)
     {
-        cards.Add(card);
+        cardController.SetUpOwner(this);
+        cards.Add(cardController);
         hand.UpdateCardsPosition(cards);
+
+        // TODO not true if fail quick discard
         GameManager.Instance.EndTurn();
     }
 
-    public void RemoveCard(Card card)
+    public void RemoveCard(CardController cardControllerToRemove)
     {
-        cards.Remove(card);
+        cards.Remove(cardControllerToRemove);
         hand.UpdateCardsPosition(cards);
     }
-
-    public void SetUpHand(PlayerHand _hand)
+    
+    public void ReplaceCard(CardController cardToReplace, CardController cardToReplaceWith)
     {
-        hand = _hand;
-        _hand.Player = this;
-        _hand.gameObject.SetActive(true);
+        int indexOfCard = cards.IndexOf(cardToReplace);
+        cards[indexOfCard] = cardToReplaceWith;
+        cardToReplaceWith.SetUpOwner(this);
+        hand.UpdateCardsPosition(cards);
     }
 
 }

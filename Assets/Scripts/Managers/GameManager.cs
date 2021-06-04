@@ -16,13 +16,16 @@ public static class EventCode
     public const byte SET_UP_DECK = 4;
     public const byte DRAW_CARD_FROM_DISCARD_PILE = 5;
     public const byte DISCARD_CARD = 6;
+    public const byte REPLACE_CARD = 7;
 }
 
-public enum TurnState
+public enum GameState
 {
+    DristibutingPhase,
+    WaitingPhase,
     DrawingPhase,
-    Play,
-
+    ReplaceCardPhase,
+    PlayCardEffectPhase
 }
 
 
@@ -31,22 +34,21 @@ public class GameManager : MonoBehaviour
     private static GameManager instance;
     public static GameManager Instance { get { return instance; } }
 
-    [SerializeField] Camera camera;
-    [SerializeField] GameObject playerPrefab;
-    [SerializeField] List<PlayerHand> playerHands;
-
-    public static List<PlayerHand> PlayerHands;
-    public static int NumberOfInstantiatedPlayer = 0;
-
+    [SerializeField] Camera cam;
+    [SerializeField] GameObject[] playerPrefabs;
+    [SerializeField] GameObject cardPrefab;
 
     List<Player> players = new List<Player>();
-
     int currentPlayerIndex = 0;
+    CardController cardDrawn;
+
+    public static int NumberOfInstantiatedPlayer = 0;
+    public static GameState GameState = GameState.WaitingPhase;
 
     public List<Player> Players { get { return players; } }
     public Player CurrentPlayer { get { return players[currentPlayerIndex]; } }
-
-
+    public CardController CardDrawn { get { return cardDrawn; } }
+    public Camera Cam { get { return cam; } }
 
 
     void Awake()
@@ -59,8 +61,6 @@ public class GameManager : MonoBehaviour
         {
             instance = this;
         }
-
-        PlayerHands = new List<PlayerHand>(playerHands);
     }
 
     // Start is called before the first frame update
@@ -74,10 +74,14 @@ public class GameManager : MonoBehaviour
         }
 
 
-        if (Player.LocalPlayerInstance == null)
+        for (int i=0; i < PhotonNetwork.PlayerList.Length; i++)
         {
-            // we're in a room. spawn a character for the local player. it gets synced by using PhotonNetwork.Instantiate
-            PhotonNetwork.Instantiate(playerPrefab.name, Vector3.zero, Quaternion.identity).GetComponent<Player>();
+            if (PhotonNetwork.PlayerList[i].IsLocal)
+            {
+                // spawn a character for the local player. it gets synced by using PhotonNetwork.Instantiate
+                PhotonNetwork.Instantiate(playerPrefabs[i].name, Vector3.zero, Quaternion.identity).GetComponent<Player>();
+            }
+
         }
 
         //is Master
@@ -95,25 +99,36 @@ public class GameManager : MonoBehaviour
     IEnumerator WaitUntilAllPlayersAreInstantiated()
     {
         yield return new WaitUntil(() => NumberOfInstantiatedPlayer == PhotonNetwork.CurrentRoom.PlayerCount);
-        Debug.LogError("nb instantiated players = " + NumberOfInstantiatedPlayer + " / nb players in room = " + PhotonNetwork.CurrentRoom.PlayerCount);
+        Debug.Log("nb instantiated players = " + NumberOfInstantiatedPlayer + " / nb players in room = " + PhotonNetwork.CurrentRoom.PlayerCount);
         yield return new WaitForEndOfFrame();
 
-        SetUpPlayerList();
-        SetUpPlayerHands();
+
+        // Set Up player list
+        foreach (PhotonPlayer photonPlayer in PhotonNetwork.PlayerList)
+        {
+            GameObject playerGO = (GameObject)photonPlayer.TagObject;
+            players.Add(playerGO.GetComponent<Player>());
+        }
 
         StartCoroutine(InitializeHands());
     }
 
     IEnumerator InitializeHands()
     {
+        GameState = GameState.DristibutingPhase;
+
         int nbCardToDistribute = 4;
         while(CurrentPlayer.Cards.Count < nbCardToDistribute)
         {
             int nbCardDrawn = CurrentPlayer.Cards.Count;
             Player oldPlayer = CurrentPlayer;
-            DeckManager.Instance.InstantiateCard();
+            if (IsMyTurn()) { 
+                InstantiateCard(EventCode.DRAW_CARD_FROM_DECK, Vector3.zero);
+            }
             yield return new WaitUntil(() => oldPlayer.Cards.Count == (nbCardDrawn + 1) );
         }
+
+        GameState = GameState.DrawingPhase;
     }
 
 
@@ -135,10 +150,6 @@ public class GameManager : MonoBehaviour
         {
             EndTurn();
         }
-        /*else if (eventCode == EventCode.DRAW_CARD_FROM_DECK)
-        {
-            DeckManager.Instance.DrawTopCard();
-        }*/
         else if (eventCode == EventCode.SET_UP_DECK)
         {
             DeckManager.Instance.SetUpDeck((object[])eventData.CustomData);
@@ -150,6 +161,13 @@ public class GameManager : MonoBehaviour
             CardController cardController = view.GetComponent<CardController>();
             DiscardPileManager.Instance.Discard(cardController);
         }
+        else if (eventCode == EventCode.REPLACE_CARD)
+        {
+            object[] data = (object[])eventData.CustomData;
+            PhotonView view = PhotonView.Find((int)data[0]);
+            CardController cardController = view.GetComponent<CardController>();
+            CurrentPlayer.ReplaceCard(cardController, cardDrawn);
+        }
     }
 
     public void EndTurn()
@@ -158,7 +176,11 @@ public class GameManager : MonoBehaviour
         if (currentPlayerIndex >= players.Count)
         {
             currentPlayerIndex = 0;
-            //roomTurn++;
+        }
+
+        if(GameState != GameState.DristibutingPhase)
+        {
+            GameState = GameState.DrawingPhase;
         }
     }
 
@@ -168,33 +190,18 @@ public class GameManager : MonoBehaviour
         return CurrentPlayer.PhotonPlayer == PhotonNetwork.LocalPlayer;
     }
 
-
-    void SetUpPlayerList()
+    public void SetCardDrawn(CardController cardController)
     {
-        Vector3 cameraRotation = new Vector3(0, 0, 360);
-        foreach (PhotonPlayer photonPlayer in PhotonNetwork.PlayerList)
-        {
-            cameraRotation.z += 90;
-            if (photonPlayer.IsLocal) {
-                camera.transform.Rotate(cameraRotation);
-            }
-            players.Add( GetPlayerWithPhotonPlayer(photonPlayer) );
-        }
+        cardDrawn = cardController;
+        GameState = GameState.ReplaceCardPhase;
     }
 
-    void SetUpPlayerHands()
+    public void InstantiateCard(byte eventCode, Vector3 position)
     {
-        foreach (Player player in players)
-        {
-            player.SetUpHand(PlayerHands.Last());
-            PlayerHands.Remove(PlayerHands.Last());
-        }
+        PhotonNetwork.Instantiate(cardPrefab.name, position, Quaternion.identity, 0, new object[] { eventCode });
     }
 
-    Player GetPlayerWithPhotonPlayer(PhotonPlayer photonPlayer)
-    {
-        GameObject playerGO = (GameObject)photonPlayer.TagObject;
-        return playerGO.GetComponent<Player>();
 
-    }
+
+
 }
