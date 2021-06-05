@@ -30,7 +30,8 @@ public class DeckManager : MonoBehaviour
         Card card;
         for (int i = 0; i < 52; i++)
         {
-            card = new Card(i, (i % 13) + 1, GetCardType(i), deckGFX.CardsSprite[i], deckGFX.BackOfCardSprite);
+            card = new Card(i, 7, GetCardType(6), deckGFX.CardsSprite[6], deckGFX.BackOfCardSprite);
+            //card = new Card(i, (i % 13) + 1, GetCardType(i), deckGFX.CardsSprite[i], deckGFX.BackOfCardSprite);
             allCards.Add(card);
         }
         deck = new List<Card>(allCards);
@@ -96,7 +97,7 @@ public class DeckManager : MonoBehaviour
     {
         if (GameManager.GameState != GameState.DrawingPhase)
         {
-            Debug.LogError("Not the drawing phase");
+            Debug.LogError("Not the drawing phase: " + GameManager.GameState.ToString());
             return;
         }
 
@@ -112,7 +113,7 @@ public class DeckManager : MonoBehaviour
             return;
         }
 
-        GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DECK, transform.position);
+        GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DECK, EventCode.DRAW_TO_DECK, transform.position);
     }
 
 

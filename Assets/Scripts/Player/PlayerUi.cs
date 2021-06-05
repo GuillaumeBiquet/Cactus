@@ -7,6 +7,7 @@ using TMPro;
 public class PlayerUi : MonoBehaviour
 {
     [SerializeField] TMP_Text playerNameText;
+    [SerializeField] GameObject myTurnGFX;
     Player target;
 
     public void SetTarget(Player _target)
@@ -24,4 +25,13 @@ public class PlayerUi : MonoBehaviour
     }
 
 
+    public void ShowMyTurnGFX()
+    {
+        myTurnGFX.SetActive(true);
+    }
+
+    public void HideMyTurnGFX()
+    {
+        myTurnGFX.SetActive(false);
+    }
 }

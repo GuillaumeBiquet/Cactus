@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
+using ExitGames.Client.Photon;
 
 public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
 {
@@ -18,6 +19,7 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
     Draggable draggableComponent;
 
     public Card Card { get { return card; } }
+    public Player Owner { get { return owner; } }
 
     public void OnPhotonInstantiate(PhotonMessageInfo info)
     {
@@ -25,8 +27,9 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
         photonView = this.GetComponent<PhotonView>();
         draggableComponent = this.GetComponent<Draggable>();
 
-        byte eventCode = (byte) info.photonView.InstantiationData[0];
-        if(eventCode == EventCode.DRAW_CARD_FROM_DECK)
+        byte eventCode = (byte)info.photonView.InstantiationData[0];
+        byte whereToCode = (byte)info.photonView.InstantiationData[1];
+        if (eventCode == EventCode.DRAW_CARD_FROM_DECK)
         {
             card = DeckManager.Instance.DrawTopCard();
         } 
@@ -40,12 +43,22 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
         this.gameObject.name = "CARD_" + card.Type + "_" + card.Value;
 
 
-        if (GameManager.GameState == GameState.DristibutingPhase)
+        if (whereToCode == EventCode.DRAW_TO_HAND)
         {
-            GameManager.Instance.CurrentPlayer.AddCard(this);
+            int? viewId = (int?)info.photonView.InstantiationData[2];
+            if (viewId != null)
+            {
+                PhotonView view = PhotonView.Find( (int) viewId);
+                Player player = view.GetComponent<Player>();
+                player.AddCard(this);
+            } 
         }
         else
         {
+            if (!photonView.IsMine)
+            {
+                HideCard();
+            }
             GameManager.Instance.SetCardDrawn(this);
         }
 
@@ -69,8 +82,29 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
     }
 
 
+    void RevealCard()
+    {
+        this.transform.eulerAngles = new Vector3(0, 0, 0);
+    }
+
+    void HideCard()
+    {
+        this.transform.eulerAngles = new Vector3(0, 180, 0);
+    }
+
+
+    public IEnumerator RevealCardForSeconds(float seconds)
+    {
+        RevealCard();
+        yield return new WaitForSeconds(seconds);
+        HideCard();
+        PhotonNetwork.RaiseEvent(EventCode.END_PLAYER_TURN, null, RaiseEventOptions.Default, SendOptions.SendReliable);
+        GameManager.Instance.EndTurn();
+    }
+
     public void SetUpOwner(Player player)
     {
+        HideCard();
         draggableComponent.enabled = photonView.IsMine;
         transform.SetParent(player.Hand.transform, false);
         owner = player;
@@ -85,26 +119,29 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
 
     public void Effect()
     {
-        if (card.Value == 7 || card.Value == 8)
+        GameManager.GameState = GameState.PlayCardEffectPhase;
+        if (card.Is7or8)
         {
-            Debug.LogError("Play 7, 8");
+            Debug.Log("Play 7, 8");
+            GameManager.Instance.CardPlayed = card;
         }
-        else if (card.Value == 9 || card.Value == 10)
+        else if (card.Is9or10)
         {
             Debug.LogError("Play 9, 10");
         }
-        else if (card.Value == 11 || card.Value == 12)
+        else if (card.IsJackOrQueen)
         {
             Debug.LogError("Play Valet, Dame");
         }
-        else if (card.Value == 13 && (card.Type == CardType.SPADE || card.Type == CardType.CLUB))
+        else if (card.IsBlackKing)
         {
             Debug.LogError("Play black king");
         }
         else
         {
             Debug.LogError("No effect");
+            GameManager.Instance.EndTurn();
         }
-        GameManager.Instance.EndTurn();
+
     }
 }

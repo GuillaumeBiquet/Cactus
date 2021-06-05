@@ -15,8 +15,13 @@ public static class EventCode
     public const byte PLAY_CARD = 3;
     public const byte SET_UP_DECK = 4;
     public const byte DRAW_CARD_FROM_DISCARD_PILE = 5;
-    public const byte DISCARD_CARD = 6;
-    public const byte REPLACE_CARD = 7;
+    public const byte DISCARD = 6;
+    public const byte QUICK_DISCARD = 7;
+    public const byte REPLACE_CARD = 8;
+
+
+    public const byte DRAW_TO_HAND = 9;
+    public const byte DRAW_TO_DECK = 10;
 }
 
 public enum GameState
@@ -41,9 +46,12 @@ public class GameManager : MonoBehaviour
     List<Player> players = new List<Player>();
     int currentPlayerIndex = 0;
     CardController cardDrawn;
+    public Card CardPlayed;
 
     public static int NumberOfInstantiatedPlayer = 0;
     public static GameState GameState = GameState.WaitingPhase;
+    public const int NB_CARDS_TO_DISTRIBUTE = 4; 
+
 
     public List<Player> Players { get { return players; } }
     public Player CurrentPlayer { get { return players[currentPlayerIndex]; } }
@@ -99,7 +107,7 @@ public class GameManager : MonoBehaviour
     IEnumerator WaitUntilAllPlayersAreInstantiated()
     {
         yield return new WaitUntil(() => NumberOfInstantiatedPlayer == PhotonNetwork.CurrentRoom.PlayerCount);
-        Debug.Log("nb instantiated players = " + NumberOfInstantiatedPlayer + " / nb players in room = " + PhotonNetwork.CurrentRoom.PlayerCount);
+        Debug.LogError("nb instantiated players = " + NumberOfInstantiatedPlayer + " / nb players in room = " + PhotonNetwork.CurrentRoom.PlayerCount);
         yield return new WaitForEndOfFrame();
 
 
@@ -110,25 +118,57 @@ public class GameManager : MonoBehaviour
             players.Add(playerGO.GetComponent<Player>());
         }
 
-        StartCoroutine(InitializeHands());
+        StartCoroutine(WaitUntilHandsAreInitialized());
     }
 
-    IEnumerator InitializeHands()
+    IEnumerator WaitUntilHandsAreInitialized()
     {
         GameState = GameState.DristibutingPhase;
-
-        int nbCardToDistribute = 4;
-        while(CurrentPlayer.Cards.Count < nbCardToDistribute)
+        foreach (Player player in Players)
         {
-            int nbCardDrawn = CurrentPlayer.Cards.Count;
-            Player oldPlayer = CurrentPlayer;
-            if (IsMyTurn()) { 
-                InstantiateCard(EventCode.DRAW_CARD_FROM_DECK, Vector3.zero);
-            }
-            yield return new WaitUntil(() => oldPlayer.Cards.Count == (nbCardDrawn + 1) );
-        }
 
+            if (player.photonView.IsMine)
+            {
+                player.InitializeHand();
+            }
+
+            yield return new WaitUntil( () => player.Cards.Count == NB_CARDS_TO_DISTRIBUTE );
+        }
         GameState = GameState.DrawingPhase;
+        CurrentPlayer.Ui.ShowMyTurnGFX();
+    }
+
+
+    public void EndTurn()
+    {
+        CurrentPlayer.Ui.HideMyTurnGFX();
+        Debug.LogError("End Turn");
+
+        currentPlayerIndex++;
+        if (currentPlayerIndex >= players.Count)
+        {
+            currentPlayerIndex = 0;
+        }
+        GameState = GameState.DrawingPhase;
+        CurrentPlayer.Ui.ShowMyTurnGFX();
+    }
+
+
+    public bool IsMyTurn()
+    {
+        return CurrentPlayer.PhotonPlayer == PhotonNetwork.LocalPlayer;
+    }
+
+    public void SetCardDrawn(CardController cardController)
+    {
+        CurrentPlayer.HidePlayersHand();
+        cardDrawn = cardController;
+        GameState = GameState.ReplaceCardPhase;
+    }
+
+    public void InstantiateCard(byte eventCode, byte WhereTo, Vector3 position, int? playerViewID = null)
+    {
+        PhotonNetwork.Instantiate(cardPrefab.name, position, Quaternion.identity, 0, new object[] { eventCode, WhereTo, playerViewID });
     }
 
 
@@ -142,10 +182,10 @@ public class GameManager : MonoBehaviour
         PhotonNetwork.NetworkingClient.EventReceived -= OnEvent;
     }
 
-
     void OnEvent(EventData eventData)
     {
         byte eventCode = eventData.Code;
+
         if (eventCode == EventCode.END_PLAYER_TURN)
         {
             EndTurn();
@@ -154,12 +194,12 @@ public class GameManager : MonoBehaviour
         {
             DeckManager.Instance.SetUpDeck((object[])eventData.CustomData);
         }
-        else if (eventCode == EventCode.DISCARD_CARD)
+        else if (eventCode == EventCode.QUICK_DISCARD)
         {
             object[] data = (object[])eventData.CustomData;
-            PhotonView view = PhotonView.Find( (int)data[0] );
+            PhotonView view = PhotonView.Find((int)data[0]);
             CardController cardController = view.GetComponent<CardController>();
-            DiscardPileManager.Instance.Discard(cardController);
+            DiscardPileManager.Instance.Discard(cardController, eventCode);
         }
         else if (eventCode == EventCode.REPLACE_CARD)
         {
@@ -167,41 +207,9 @@ public class GameManager : MonoBehaviour
             PhotonView view = PhotonView.Find((int)data[0]);
             CardController cardController = view.GetComponent<CardController>();
             CurrentPlayer.ReplaceCard(cardController, cardDrawn);
-        }
-    }
-
-    public void EndTurn()
-    {
-        currentPlayerIndex++;
-        if (currentPlayerIndex >= players.Count)
-        {
-            currentPlayerIndex = 0;
+            DiscardPileManager.Instance.Discard(cardController, eventCode);
         }
 
-        if(GameState != GameState.DristibutingPhase)
-        {
-            GameState = GameState.DrawingPhase;
-        }
     }
-
-
-    public bool IsMyTurn()
-    {
-        return CurrentPlayer.PhotonPlayer == PhotonNetwork.LocalPlayer;
-    }
-
-    public void SetCardDrawn(CardController cardController)
-    {
-        cardDrawn = cardController;
-        GameState = GameState.ReplaceCardPhase;
-    }
-
-    public void InstantiateCard(byte eventCode, Vector3 position)
-    {
-        PhotonNetwork.Instantiate(cardPrefab.name, position, Quaternion.identity, 0, new object[] { eventCode });
-    }
-
-
-
 
 }

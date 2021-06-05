@@ -27,15 +27,20 @@ public class Draggable : MonoBehaviour
         if (!enabled)
             return;
 
-        if( GameManager.GameState == GameState.ReplaceCardPhase)
+
+        if (GameManager.GameState == GameState.PlayCardEffectPhase && GameManager.Instance.IsMyTurn())
+        {
+            if (GameManager.Instance.CardPlayed.Is7or8)
+            {
+                StartCoroutine( cardController.RevealCardForSeconds(2) );
+            }
+        }
+        else if( GameManager.GameState == GameState.ReplaceCardPhase && GameManager.Instance.IsMyTurn())
         {
             ReplaceCardEvent();
-            DiscardCardEvent();
+            QuickDiscardEvent();
         }
-        else
-        {
-            positionToReturnTo = transform.position;
-        }
+        positionToReturnTo = transform.position;
     }
 
     void OnMouseDrag()
@@ -55,7 +60,17 @@ public class Draggable : MonoBehaviour
 
         if (isOnDiscardPile)
         {
-            DiscardCardEvent();
+            if (DiscardPileManager.Instance.IsEmpty || cardController.Card.Value != DiscardPileManager.Instance.LastCardValue)
+            {
+                //TODO : punish player and put card back
+                transform.position = positionToReturnTo;
+                GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DECK, EventCode.DRAW_TO_HAND, Vector3.zero, cardController.Owner.ViewID);
+            }
+            else
+            {
+                QuickDiscardEvent();
+            }
+
         }
         else
         {
@@ -79,12 +94,12 @@ public class Draggable : MonoBehaviour
         }
     }
 
-    void DiscardCardEvent()
+    void QuickDiscardEvent()
     {
         object[] data = new object[] { photonView.ViewID };
         // send deck to everyone exept me (master)
-        PhotonNetwork.RaiseEvent(EventCode.DISCARD_CARD, data, RaiseEventOptions.Default, SendOptions.SendReliable);
-        DiscardPileManager.Instance.Discard(this.GetComponent<CardController>());
+        PhotonNetwork.RaiseEvent(EventCode.QUICK_DISCARD, data, RaiseEventOptions.Default, SendOptions.SendReliable);
+        DiscardPileManager.Instance.Discard(this.GetComponent<CardController>(), EventCode.QUICK_DISCARD);
     }
 
 
@@ -94,5 +109,6 @@ public class Draggable : MonoBehaviour
         // send deck to everyone exept me (master)
         PhotonNetwork.RaiseEvent(EventCode.REPLACE_CARD, data, RaiseEventOptions.Default, SendOptions.SendReliable);
         GameManager.Instance.CurrentPlayer.ReplaceCard(cardController, GameManager.Instance.CardDrawn);
+        DiscardPileManager.Instance.Discard(cardController, EventCode.REPLACE_CARD);
     }
 }

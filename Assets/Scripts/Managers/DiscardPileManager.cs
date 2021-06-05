@@ -14,6 +14,8 @@ public class DiscardPileManager : MonoBehaviour
     List<Card> discardedCards = new List<Card>();
     SpriteRenderer spriteRenderer;
     Sprite defaultSprite;
+    public bool IsEmpty { get { return discardedCards.Count == 0; } }
+    public int LastCardValue { get { return discardedCards.Last().Value; } }
 
     void Awake()
     {
@@ -36,22 +38,21 @@ public class DiscardPileManager : MonoBehaviour
         UpdatePileImage();
     }
 
-    public void Discard(CardController cardController)
+    public void Discard(CardController cardController, byte eventCode)
     {
         Card discardedCard = cardController.Card;
-        discardedCards.Add(discardedCard);
-        cardController.DestroySelf();
 
-        GameManager.GameState = GameState.PlayCardEffectPhase;
-        cardController.Effect();
-
-        // if normal discard
-        // play card
-        // end turn
-
-        // else if quick discard 
-        //Check if same value as previous discarded card and play effect
-        //if not punish player and put card back
+        if(eventCode == EventCode.QUICK_DISCARD)
+        {
+            discardedCards.Add(discardedCard);
+            cardController.DestroySelf();
+        }
+        else
+        {
+            cardController.Effect();
+            discardedCards.Add(discardedCard);
+            cardController.DestroySelf();
+        }
 
         UpdatePileImage();
     }
@@ -77,6 +78,7 @@ public class DiscardPileManager : MonoBehaviour
     }
 
 
+
     private void OnMouseDown()
     {
         if (GameManager.GameState != GameState.DrawingPhase)
@@ -97,7 +99,7 @@ public class DiscardPileManager : MonoBehaviour
             return;
         }
 
-        GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DISCARD_PILE, transform.position);
+        GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DISCARD_PILE, EventCode.DRAW_TO_DECK, transform.position);
 
     }
 
