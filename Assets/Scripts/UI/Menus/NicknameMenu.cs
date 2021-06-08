@@ -28,6 +28,5 @@ public class NicknameMenu : MonoBehaviour
         }
 
         LobbyManager.Instance.ConnectToMaster(nickNameInput.text);
-        LobbyManager.Instance.HideNicknameMenu();
     }
 }

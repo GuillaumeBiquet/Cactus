@@ -18,6 +18,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     [SerializeField] GameObject nickNameMenu;
     [SerializeField] GameObject createOrJoinRoomMenu;
     [SerializeField] GameObject roomMenu;
+    [SerializeField] GameObject slider;
 
 
     void Awake()
@@ -32,9 +33,21 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         }
     }
 
+    private void Start()
+    {
+        if (PhotonNetwork.IsConnected)
+        {
+            nickNameMenu.SetActive(false);
+            createOrJoinRoomMenu.SetActive(true);
+            PhotonNetwork.LeaveRoom();
+        }
+    }
+
     public void ConnectToMaster(string playerNickname)
     {
-        Debug.Log("Connecting...");
+        slider.SetActive(true);
+        nickNameMenu.SetActive(false);
+
         PhotonNetwork.AutomaticallySyncScene = true;
         PhotonNetwork.GameVersion = GameSettings.GameVersion;
         PhotonNetwork.NickName = playerNickname;
@@ -43,11 +56,9 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log(PhotonNetwork.LocalPlayer.NickName + " is connected to server.");
-        if (!PhotonNetwork.InLobby)
-        {
-            PhotonNetwork.JoinLobby();
-        }
+        slider.SetActive(false);
+        createOrJoinRoomMenu.SetActive(true);
+        PhotonNetwork.JoinLobby();
     }
 
     public override void OnDisconnected(DisconnectCause cause)
@@ -68,9 +79,4 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         createOrJoinRoomMenu.SetActive(true);
     }
 
-    public void HideNicknameMenu()
-    {
-        nickNameMenu.SetActive(false);
-        createOrJoinRoomMenu.SetActive(true);
-    }
 }

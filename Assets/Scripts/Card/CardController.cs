@@ -12,20 +12,21 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
 
     Card card;
     Player owner;
-    bool isFlipped = false;
 
     SpriteRenderer spriteRenderer;
     PhotonView photonView;
-    Draggable draggableComponent;
+
+
+    [SerializeField] GameObject selectedGFX;
 
     public Card Card { get { return card; } }
     public Player Owner { get { return owner; } }
+    public PhotonView View { get { return photonView; } }
 
     public void OnPhotonInstantiate(PhotonMessageInfo info)
     {
         spriteRenderer = this.GetComponent<SpriteRenderer>();
         photonView = this.GetComponent<PhotonView>();
-        draggableComponent = this.GetComponent<Draggable>();
 
         byte eventCode = (byte)info.photonView.InstantiationData[0];
         byte whereToCode = (byte)info.photonView.InstantiationData[1];
@@ -39,7 +40,6 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
         }
 
         spriteRenderer.sprite = card.Front;
-        draggableComponent.enabled = false;
         this.gameObject.name = "CARD_" + card.Type + "_" + card.Value;
 
 
@@ -51,7 +51,7 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
                 PhotonView view = PhotonView.Find( (int) viewId);
                 Player player = view.GetComponent<Player>();
                 player.AddCard(this);
-            } 
+            }
         }
         else
         {
@@ -65,31 +65,30 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
     }
 
 
-    void Update()
+    public void RevealCard()
     {
-
-        if ((this.transform.eulerAngles.y > 90f || this.transform.eulerAngles.y < -90f) && !isFlipped)
-        {
-            spriteRenderer.sprite = card.Back;
-            isFlipped = true;
-        }
-        else if ((this.transform.eulerAngles.y > -90f && this.transform.eulerAngles.y < 90f) && isFlipped)
-        {
-            spriteRenderer.sprite = card.Front;
-            isFlipped = false;
-        }
-
+        spriteRenderer.sprite = card.Front;
     }
 
-
-    void RevealCard()
+    public void HideCard()
     {
-        this.transform.eulerAngles = new Vector3(0, 0, 0);
+        spriteRenderer.sprite = card.Back;
     }
 
-    void HideCard()
+    public void SelectCard()
     {
-        this.transform.eulerAngles = new Vector3(0, 180, 0);
+        if(GameManager.Instance.CardSelected != null) {
+            GameManager.Instance.CardSelected.UnselectCard();
+        }
+        selectedGFX.SetActive(true);
+        GameManager.Instance.CardSelected = this;
+    }
+
+    public void UnselectCard()
+    {
+        selectedGFX.SetActive(false);
+        GameManager.Instance.CardSelected = null;
+
     }
 
 
@@ -104,44 +103,58 @@ public class CardController : MonoBehaviour, IPunInstantiateMagicCallback
 
     public void SetUpOwner(Player player)
     {
-        HideCard();
-        draggableComponent.enabled = photonView.IsMine;
         transform.SetParent(player.Hand.transform, false);
+        HideCard();
         owner = player;
     }
 
     public void DestroySelf()
     {
-        owner.RemoveCard(this);
+        if(owner != null)
+            owner.RemoveCard(this);
         Destroy(this.gameObject);
     }
 
 
     public void Effect()
     {
+        if (!photonView.IsMine)
+            return;
+
+
         GameManager.GameState = GameState.PlayCardEffectPhase;
         if (card.Is7or8)
         {
-            Debug.Log("Play 7, 8");
+            HelperManager.Instance.ShowHelper("Click on one of your card to reveal");
             GameManager.Instance.CardPlayed = card;
+            GameManager.Instance.HideAllPlayerHandsExeptLocal();
         }
         else if (card.Is9or10)
         {
-            Debug.LogError("Play 9, 10");
+            HelperManager.Instance.ShowHelper("Click on another player card to reveal");
+            GameManager.Instance.CardPlayed = card;
+            GameManager.Instance.HideLocalPlayerHands();
+
         }
-        else if (card.IsJackOrQueen)
+        else if (card.IsJackOrQueen || card.IsBlackKing)
         {
-            Debug.LogError("Play Valet, Dame");
-        }
-        else if (card.IsBlackKing)
-        {
-            Debug.LogError("Play black king");
+            if (card.IsJackOrQueen)
+                HelperManager.Instance.ShowHelper("Click on another player card to steal");
+            else if (card.IsBlackKing)
+                HelperManager.Instance.ShowHelper("Click on another player card to reveal and steal");
+            GameManager.Instance.CardPlayed = card;
+            GameManager.Instance.HideLocalPlayerHands();
         }
         else
         {
-            Debug.LogError("No effect");
+            PhotonNetwork.RaiseEvent(EventCode.END_PLAYER_TURN, null, RaiseEventOptions.Default, SendOptions.SendReliable);
             GameManager.Instance.EndTurn();
         }
+    }
 
+
+    public void ReturnToPos()
+    {
+        transform.position = this.GetComponent<Draggable>().PositionToReturnTo;
     }
 }

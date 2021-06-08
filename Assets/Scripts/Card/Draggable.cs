@@ -15,6 +15,15 @@ public class Draggable : MonoBehaviour
     CardController cardController;
 
     bool isOnDiscardPile = false;
+    bool canDrag = false;
+    public Vector3 PositionToReturnTo { get { return positionToReturnTo; } set { positionToReturnTo = value; transform.position = positionToReturnTo; } }
+
+    bool ShouldRevealCard { get { return  (GameManager.Instance.CardPlayed.Is7or8 && cardController.View.IsMine) ||  (GameManager.Instance.CardPlayed.Is9or10 && !cardController.View.IsMine); } }
+    bool ShouldSelectCard { get { return !cardController.View.IsMine && GameManager.Instance.CardSelected == null; } }
+    bool ShouldExchangeCard { get { return cardController.View.IsMine && GameManager.Instance.CardSelected != null; } }
+    bool ShouldPlayCard { get { return GameManager.GameState == GameState.PlayCardEffectPhase && GameManager.Instance.IsMyTurn(); } }
+    bool ShouldReplaceCard { get { return GameManager.GameState == GameState.ReplaceCardPhase && GameManager.Instance.IsMyTurn() && cardController.View.IsMine; } }
+
 
     private void Awake()
     {
@@ -24,28 +33,49 @@ public class Draggable : MonoBehaviour
 
     void OnMouseDown()
     {
-        if (!enabled)
-            return;
-
-
-        if (GameManager.GameState == GameState.PlayCardEffectPhase && GameManager.Instance.IsMyTurn())
+        canDrag = photonView.IsMine;
+        if (ShouldPlayCard)
         {
-            if (GameManager.Instance.CardPlayed.Is7or8)
+            if (ShouldRevealCard)
             {
+                HelperManager.Instance.HideHelper();
                 StartCoroutine( cardController.RevealCardForSeconds(2) );
             }
+            else if (GameManager.Instance.CardPlayed.IsJackOrQueen || GameManager.Instance.CardPlayed.IsBlackKing)
+            {
+                if (ShouldSelectCard)
+                {
+                    if (GameManager.Instance.CardPlayed.IsBlackKing)
+                    {
+                        cardController.RevealCard();
+                    }
+                    HelperManager.Instance.ShowHelper("Select one of your card to exchange with");
+                    cardController.SelectCard();
+                    GameManager.Instance.HideAllPlayerHandsExeptLocal();
+                }
+                else if (ShouldExchangeCard)
+                {
+                    HelperManager.Instance.HideHelper();
+                    ExchangeCardEvent();
+                    GameManager.Instance.CardSelected.UnselectCard();
+                    PhotonNetwork.RaiseEvent(EventCode.END_PLAYER_TURN, null, RaiseEventOptions.Default, SendOptions.SendReliable);
+                    GameManager.Instance.EndTurn();
+                }
+            }
+            canDrag = false;
         }
-        else if( GameManager.GameState == GameState.ReplaceCardPhase && GameManager.Instance.IsMyTurn())
+        else if( ShouldReplaceCard )
         {
+            HelperManager.Instance.HideHelper();
             ReplaceCardEvent();
-            QuickDiscardEvent();
+            //QuickDiscardEvent();
+            canDrag = false;
         }
-        positionToReturnTo = transform.position;
     }
 
     void OnMouseDrag()
     {
-        if (!enabled)
+        if (!canDrag)
             return;
 
         mousePos = Camera.main.ScreenToWorldPoint( Input.mousePosition );
@@ -55,14 +85,13 @@ public class Draggable : MonoBehaviour
 
     void OnMouseUp()
     {
-        if (!enabled)
+        if (!canDrag)
             return;
 
         if (isOnDiscardPile)
         {
             if (DiscardPileManager.Instance.IsEmpty || cardController.Card.Value != DiscardPileManager.Instance.LastCardValue)
             {
-                //TODO : punish player and put card back
                 transform.position = positionToReturnTo;
                 GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DECK, EventCode.DRAW_TO_HAND, Vector3.zero, cardController.Owner.ViewID);
             }
@@ -97,9 +126,8 @@ public class Draggable : MonoBehaviour
     void QuickDiscardEvent()
     {
         object[] data = new object[] { photonView.ViewID };
-        // send deck to everyone exept me (master)
-        PhotonNetwork.RaiseEvent(EventCode.QUICK_DISCARD, data, RaiseEventOptions.Default, SendOptions.SendReliable);
-        DiscardPileManager.Instance.Discard(this.GetComponent<CardController>(), EventCode.QUICK_DISCARD);
+        // send deck to everyone
+        PhotonNetwork.RaiseEvent(EventCode.QUICK_DISCARD, data, new RaiseEventOptions { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
     }
 
 
@@ -110,5 +138,24 @@ public class Draggable : MonoBehaviour
         PhotonNetwork.RaiseEvent(EventCode.REPLACE_CARD, data, RaiseEventOptions.Default, SendOptions.SendReliable);
         GameManager.Instance.CurrentPlayer.ReplaceCard(cardController, GameManager.Instance.CardDrawn);
         DiscardPileManager.Instance.Discard(cardController, EventCode.REPLACE_CARD);
+    }
+
+
+    void ExchangeCardEvent()
+    {
+
+        CardController card1 = cardController;
+        CardController card2 = GameManager.Instance.CardSelected;
+        Player owner1 = card1.Owner;
+        Player owner2 = card2.Owner;
+
+        object[] data = new object[] { card1.View.ViewID, card2.View.ViewID };
+        // send deck to everyone exept me (master)
+        PhotonNetwork.RaiseEvent(EventCode.EXCHANGE_CARD, data, RaiseEventOptions.Default, SendOptions.SendReliable);
+
+        card1.View.TransferOwnership(owner2.PhotonPlayer);
+        card2.View.TransferOwnership(owner1.PhotonPlayer);
+        owner1.ReplaceCard(card1, card2);
+        owner2.ReplaceCard(card2, card1);
     }
 }

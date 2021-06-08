@@ -25,7 +25,7 @@ public class Card
 
 
     public bool Is7or8 { get { return value == 7 || value == 8; } }
-    public bool Is9or10 { get { return value == 7 || value == 8; } }
+    public bool Is9or10 { get { return value == 9 || value == 10; } }
     public bool IsJackOrQueen { get { return value == 11 || value == 12; } }
     public bool IsBlackKing { get { return value == 13 && (type == CardType.SPADE || type == CardType.CLUB); } }
 

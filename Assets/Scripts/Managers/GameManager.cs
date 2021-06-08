@@ -8,22 +8,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
-public static class EventCode
-{
-    public const byte END_PLAYER_TURN = 1;
-    public const byte DRAW_CARD_FROM_DECK = 2;
-    public const byte PLAY_CARD = 3;
-    public const byte SET_UP_DECK = 4;
-    public const byte DRAW_CARD_FROM_DISCARD_PILE = 5;
-    public const byte DISCARD = 6;
-    public const byte QUICK_DISCARD = 7;
-    public const byte REPLACE_CARD = 8;
-
-
-    public const byte DRAW_TO_HAND = 9;
-    public const byte DRAW_TO_DECK = 10;
-}
-
 public enum GameState
 {
     DristibutingPhase,
@@ -37,25 +21,36 @@ public enum GameState
 public class GameManager : MonoBehaviour
 {
     private static GameManager instance;
-    public static GameManager Instance { get { return instance; } }
+    public static GameState GameState = GameState.WaitingPhase;
+    public static Dictionary<string, int> scores = new Dictionary<string, int>();
+
+    public const int NB_CARDS_TO_DISTRIBUTE = 4;
 
     [SerializeField] Camera cam;
     [SerializeField] GameObject[] playerPrefabs;
+    [SerializeField] GameObject[] objectsToDisableWhenNotPlaying;
     [SerializeField] GameObject cardPrefab;
+    [SerializeField] Countdown countdown;
+    [SerializeField] CactusController cactusController;
+    [SerializeField] Scoreboard scoreboard;
 
     List<Player> players = new List<Player>();
     int currentPlayerIndex = 0;
-    CardController cardDrawn;
-    public Card CardPlayed;
+    int turnsLeft = 0;
+    bool isCactus = false;
+    bool gameIsFinished = false;
 
-    public static int NumberOfInstantiatedPlayer = 0;
-    public static GameState GameState = GameState.WaitingPhase;
-    public const int NB_CARDS_TO_DISTRIBUTE = 4; 
+    [System.NonSerialized] public CardController CardDrawn;
+    [System.NonSerialized] public CardController CardSelected;
+    [System.NonSerialized] public Card CardPlayed;
+    [System.NonSerialized] public int NbInstantiatedPlayer = 0;
 
-
+    public static GameManager Instance { get { return instance; } }
     public List<Player> Players { get { return players; } }
+    public Dictionary<string, int> Ccores { get { return scores; } }
+    public GameObject[] ObjectsToDisableWhenNotPlaying { get { return objectsToDisableWhenNotPlaying; } }
     public Player CurrentPlayer { get { return players[currentPlayerIndex]; } }
-    public CardController CardDrawn { get { return cardDrawn; } }
+    public bool GameIsFinished { get { return gameIsFinished; } }
     public Camera Cam { get { return cam; } }
 
 
@@ -95,21 +90,18 @@ public class GameManager : MonoBehaviour
         //is Master
         if (PhotonNetwork.IsMasterClient)
         {
-            // suffle deck
             DeckManager.Instance.ShuffleDeck();
         }
 
+        HideObjectsToDisableWhenNotPlaying();
+
         StartCoroutine( WaitUntilAllPlayersAreInstantiated() );
-
-
     }
 
     IEnumerator WaitUntilAllPlayersAreInstantiated()
     {
-        yield return new WaitUntil(() => NumberOfInstantiatedPlayer == PhotonNetwork.CurrentRoom.PlayerCount);
-        Debug.LogError("nb instantiated players = " + NumberOfInstantiatedPlayer + " / nb players in room = " + PhotonNetwork.CurrentRoom.PlayerCount);
+        yield return new WaitUntil(() => NbInstantiatedPlayer == PhotonNetwork.CurrentRoom.PlayerCount);
         yield return new WaitForEndOfFrame();
-
 
         // Set Up player list
         foreach (PhotonPlayer photonPlayer in PhotonNetwork.PlayerList)
@@ -126,31 +118,45 @@ public class GameManager : MonoBehaviour
         GameState = GameState.DristibutingPhase;
         foreach (Player player in Players)
         {
-
-            if (player.photonView.IsMine)
-            {
+            if (player.photonView.IsMine) {
                 player.InitializeHand();
             }
-
             yield return new WaitUntil( () => player.Cards.Count == NB_CARDS_TO_DISTRIBUTE );
         }
+        countdown.gameObject.SetActive(true);
+    }
+
+    public void StartGame()
+    {
+        ShowObjectsToDisableWhenNotPlaying();
         GameState = GameState.DrawingPhase;
-        CurrentPlayer.Ui.ShowMyTurnGFX();
+        CurrentPlayer.StartTurn();
     }
 
 
     public void EndTurn()
     {
-        CurrentPlayer.Ui.HideMyTurnGFX();
-        Debug.LogError("End Turn");
-
-        currentPlayerIndex++;
-        if (currentPlayerIndex >= players.Count)
+        if (isCactus)
         {
+            if(turnsLeft == 0)
+            {
+                FinishGame();
+            }
+            else
+            {
+                turnsLeft--;
+                cactusController.UpdateTurnsLeft(turnsLeft);
+            }
+        }
+
+        ShowAllPlayerHands();
+        CurrentPlayer.Ui.HideMyTurnGFX();
+        currentPlayerIndex++;
+        if (currentPlayerIndex >= players.Count) {
             currentPlayerIndex = 0;
         }
         GameState = GameState.DrawingPhase;
-        CurrentPlayer.Ui.ShowMyTurnGFX();
+        CurrentPlayer.StartTurn();
     }
 
 
@@ -161,8 +167,11 @@ public class GameManager : MonoBehaviour
 
     public void SetCardDrawn(CardController cardController)
     {
-        CurrentPlayer.HidePlayersHand();
-        cardDrawn = cardController;
+        if (cardController.View.IsMine)
+        {
+            HideAllPlayerHandsExeptLocal();
+        }
+        CardDrawn = cardController;
         GameState = GameState.ReplaceCardPhase;
     }
 
@@ -171,45 +180,78 @@ public class GameManager : MonoBehaviour
         PhotonNetwork.Instantiate(cardPrefab.name, position, Quaternion.identity, 0, new object[] { eventCode, WhereTo, playerViewID });
     }
 
-
-    private void OnEnable()
+    public void HideAllPlayerHandsExeptLocal()
     {
-        PhotonNetwork.NetworkingClient.EventReceived += OnEvent;
+        foreach (Player player in players)
+        {
+            if ( player != Player.LocalPlayerInstance)
+            {
+                player.HidePlayerHand();
+            }
+            else
+            {
+                player.ShowPlayerHand();
+            }
+        }
     }
 
-    private void OnDisable()
+    public void ShowAllPlayerHands()
     {
-        PhotonNetwork.NetworkingClient.EventReceived -= OnEvent;
+        foreach (Player player in players)
+        {
+            player.ShowPlayerHand();
+        }
     }
 
-    void OnEvent(EventData eventData)
+    public void HideLocalPlayerHands()
     {
-        byte eventCode = eventData.Code;
-
-        if (eventCode == EventCode.END_PLAYER_TURN)
+        foreach (Player player in players)
         {
-            EndTurn();
+            if (player != Player.LocalPlayerInstance)
+            {
+                player.ShowPlayerHand();
+            }
+            else
+            {
+                player.HidePlayerHand();
+            }
         }
-        else if (eventCode == EventCode.SET_UP_DECK)
-        {
-            DeckManager.Instance.SetUpDeck((object[])eventData.CustomData);
-        }
-        else if (eventCode == EventCode.QUICK_DISCARD)
-        {
-            object[] data = (object[])eventData.CustomData;
-            PhotonView view = PhotonView.Find((int)data[0]);
-            CardController cardController = view.GetComponent<CardController>();
-            DiscardPileManager.Instance.Discard(cardController, eventCode);
-        }
-        else if (eventCode == EventCode.REPLACE_CARD)
-        {
-            object[] data = (object[])eventData.CustomData;
-            PhotonView view = PhotonView.Find((int)data[0]);
-            CardController cardController = view.GetComponent<CardController>();
-            CurrentPlayer.ReplaceCard(cardController, cardDrawn);
-            DiscardPileManager.Instance.Discard(cardController, eventCode);
-        }
-
     }
+
+    public void Cactus()
+    {
+        turnsLeft = Players.Count;
+        isCactus = true;
+        cactusController.DisableButton();
+        EndTurn();
+    }
+
+    public void ShowObjectsToDisableWhenNotPlaying()
+    {
+        foreach(GameObject gameObject in objectsToDisableWhenNotPlaying)
+        {
+            gameObject.SetActive(true);
+        }
+    }
+
+    public void HideObjectsToDisableWhenNotPlaying()
+    {
+        foreach (GameObject gameObject in objectsToDisableWhenNotPlaying)
+        {
+            gameObject.SetActive(false);
+        }
+    }
+
+    public void FinishGame()
+    {
+        gameIsFinished = true;
+        HideObjectsToDisableWhenNotPlaying();
+        scoreboard.AddScores(players);
+        foreach(Player player in players)
+        {
+            player.ShowAllCardsInHand();
+        }
+    }
+
 
 }

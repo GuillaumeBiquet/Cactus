@@ -6,6 +6,7 @@ using Photon.Realtime;
 using ExitGames.Client.Photon;
 using System;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class Player: MonoBehaviourPunCallbacks, IPunInstantiateMagicCallback
 {
@@ -31,9 +32,8 @@ public class Player: MonoBehaviourPunCallbacks, IPunInstantiateMagicCallback
         if (photonView.IsMine)
         {
             LocalPlayerInstance = this;
+            hand.ShowLocalPlayerGFX();
         }
-        // #Critical we flag as don't destroy on load so that instance survives level synchronization, thus giving a seamless experience when levels load.
-        DontDestroyOnLoad(this.gameObject);
     }
 
 
@@ -46,7 +46,7 @@ public class Player: MonoBehaviourPunCallbacks, IPunInstantiateMagicCallback
 
         ui.SetTarget(this);
 
-        GameManager.NumberOfInstantiatedPlayer++;
+        GameManager.Instance.NbInstantiatedPlayer++;
     }
 
 
@@ -78,38 +78,44 @@ public class Player: MonoBehaviourPunCallbacks, IPunInstantiateMagicCallback
         cards[indexOfCard] = cardToReplaceWith;
         cardToReplaceWith.SetUpOwner(this);
         hand.UpdateCardsPosition(cards);
-
-        ShowPlayersHand();
     }
 
-    public void HidePlayersHand()
+    public void HidePlayerHand()
     {
-        if (photonView.IsMine)
+        hiddingHand.SetActive(true);
+    }
+
+    public void ShowPlayerHand()
+    {
+        hiddingHand.SetActive(false);
+    }
+
+    public void ShowAllCardsInHand()
+    {
+        foreach(CardController card in cards)
         {
-            foreach (Player player in GameManager.Instance.Players)
-            {
-                if(player != this)
-                {
-                    player.hiddingHand.SetActive(true);
-                }
-            }
+            card.RevealCard();
         }
     }
 
-    public void ShowPlayersHand()
+    public void StartTurn()
     {
-        if (photonView.IsMine)
+        ui.ShowMyTurnGFX();
+        if(photonView.IsMine)
         {
-            foreach (Player player in GameManager.Instance.Players)
-            {
-                if (player != this)
-                {
-                    player.hiddingHand.SetActive(false);
-                }
-            }
+            HelperManager.Instance.ShowHelper("Draw a card");
+        }
+        else
+        {
+            HelperManager.Instance.HideHelper();
         }
     }
 
 
+
+    public override void OnPlayerLeftRoom(PhotonPlayer otherPhotonPlayer)
+    {
+        SceneManager.LoadScene(0);
+    }
 
 }

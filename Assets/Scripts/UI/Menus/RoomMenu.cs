@@ -3,12 +3,17 @@ using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using System.Linq;
 
 public class RoomMenu : MonoBehaviourPunCallbacks
 {
 
     [SerializeField] GameObject playerDisplayPrefab;
-    [SerializeField] Transform content;
+    [SerializeField] Transform playersView;
+    [SerializeField] TMP_Text roomId;
+    [SerializeField] TMP_Text AtLeast2Players;
+    [SerializeField] GameObject StartGameButton;
 
     List<PlayerDisplay> playerDisplayList = new List<PlayerDisplay>();
 
@@ -17,6 +22,12 @@ public class RoomMenu : MonoBehaviourPunCallbacks
     {
         base.OnEnable();
         GetCurrentRoomPlayers();
+        roomId.text = "# " + PhotonNetwork.CurrentRoom.Name;
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            StartGameButton.SetActive(true);
+        }
     }
 
     public override void OnDisable()
@@ -33,9 +44,18 @@ public class RoomMenu : MonoBehaviourPunCallbacks
     {
         if(PhotonNetwork.CurrentRoom != null && PhotonNetwork.IsConnected)
         {
-            foreach(KeyValuePair<int, PhotonPlayer> playerInfo in PhotonNetwork.CurrentRoom.Players)
+            if (PhotonNetwork.PlayerList.Any(p => p.NickName == PhotonNetwork.LocalPlayer.NickName && p != PhotonNetwork.LocalPlayer))
             {
-                InstantiatePlayerDisplay(playerInfo.Value);
+                Debug.LogError("A player with the same nickname is already in this room.");
+                Debug.LogError("Restart the game and choose a different nickname to get in this room.");
+                LeaveRoom();
+            }
+            else
+            {
+                foreach (PhotonPlayer player in PhotonNetwork.PlayerList)
+                {
+                    InstantiatePlayerDisplay(player);
+                }
             }
         }
     }
@@ -49,16 +69,14 @@ public class RoomMenu : MonoBehaviourPunCallbacks
         }
         else
         {
-            PlayerDisplay playerDisplay = Instantiate(playerDisplayPrefab, content).GetComponent<PlayerDisplay>();
+            PlayerDisplay playerDisplay = Instantiate(playerDisplayPrefab, playersView).GetComponent<PlayerDisplay>();
             playerDisplay.SetPlayerInfo(photonPlayer);
             playerDisplayList.Add(playerDisplay);
         }
-
     }
 
     public override void OnPlayerEnteredRoom(PhotonPlayer newPhotonPlayer)
     {
-        Debug.Log("entered");
         InstantiatePlayerDisplay(newPhotonPlayer);
     }
 
@@ -73,11 +91,7 @@ public class RoomMenu : MonoBehaviourPunCallbacks
     {
         base.OnMasterClientSwitched(newMasterClient);
         LeaveRoom();            
-        //Todo
-        Debug.Log("master left the room");
-
     }
-
 
     public void LeaveRoom()
     {
@@ -87,17 +101,21 @@ public class RoomMenu : MonoBehaviourPunCallbacks
 
     public void StartGame()
     {
-        if (PhotonNetwork.IsMasterClient)
+        if(PhotonNetwork.PlayerList.Length < 2)
         {
-            PhotonNetwork.CurrentRoom.IsOpen = false;
-            PhotonNetwork.CurrentRoom.IsVisible = false;
-            PhotonNetwork.LoadLevel(1);
+            StartCoroutine(ShowTwoPLayerMinMessage());
+            return;
         }
-        else
-        {
-            //Todo
-            Debug.Log("not the master client");
-        }
+        PhotonNetwork.CurrentRoom.IsOpen = false;
+        PhotonNetwork.CurrentRoom.IsVisible = false;
+        PhotonNetwork.LoadLevel(1);
+    }
+
+    IEnumerator ShowTwoPLayerMinMessage()
+    {
+        AtLeast2Players.gameObject.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        AtLeast2Players.gameObject.SetActive(false);
     }
 
 }

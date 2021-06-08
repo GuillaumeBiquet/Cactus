@@ -5,11 +5,9 @@ using UnityEngine;
 public class PlayerHand : MonoBehaviour
 {
 
-    Player player;
-    public Player Player { get { return player; } set { player = value; } }
-
     [SerializeField] int columnLength = 7;
     [SerializeField] Vector2 space = new Vector2(0.4f, 0.5f);
+    [SerializeField] GameObject localPlayerGFX;
 
     Vector3 position = Vector3.zero;
     Vector2 startPosition;
@@ -48,10 +46,15 @@ public class PlayerHand : MonoBehaviour
             position.x = startPosition.x + (space.x * (i % nbColumn));
             position.y = startPosition.y + (space.y * (i / nbColumn));
             cardController.transform.localPosition = position;
+            cardController.GetComponent<Draggable>().PositionToReturnTo = cardController.transform.position;
             i++;
         }
 
     }
 
+    public void ShowLocalPlayerGFX()
+    {
+        localPlayerGFX.SetActive(true);
+    }
 
 }

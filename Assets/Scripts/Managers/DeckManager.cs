@@ -30,15 +30,14 @@ public class DeckManager : MonoBehaviour
         Card card;
         for (int i = 0; i < 52; i++)
         {
-            card = new Card(i, 7, GetCardType(6), deckGFX.CardsSprite[6], deckGFX.BackOfCardSprite);
-            //card = new Card(i, (i % 13) + 1, GetCardType(i), deckGFX.CardsSprite[i], deckGFX.BackOfCardSprite);
+            //card = new Card(i, 13, GetCardType(i), deckGFX.CardsSprite[i], deckGFX.BackOfCardSprite);
+            card = new Card(i, (i % 13) + 1, GetCardType(i), deckGFX.CardsSprite[i], deckGFX.BackOfCardSprite);
             allCards.Add(card);
         }
         deck = new List<Card>(allCards);
 
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = deckGFX.BackOfCardSprite;
-
     }
 
 
@@ -62,7 +61,6 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-
     public void ShuffleDeck()
     {
         int n = deck.Count;
@@ -80,18 +78,15 @@ public class DeckManager : MonoBehaviour
             nbrOfSuffle--;
         }
 
-
         object[] data = new object[] { ListOfCardsToArrayOfIndex(deck) };
         // send deck to everyone exept me (master)
         PhotonNetwork.RaiseEvent(EventCode.SET_UP_DECK, data, RaiseEventOptions.Default, SendOptions.SendReliable);
-
     }
 
     public void SetUpDeck(object[] data)
     {
         deck = ArrayOfIndexToListOfCards( (int[]) data[0] );
     }
-
 
     private void OnMouseDown()
     {
@@ -113,10 +108,9 @@ public class DeckManager : MonoBehaviour
             return;
         }
 
+        HelperManager.Instance.ShowHelper("Select a card to replace or discard drawn card");
         GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DECK, EventCode.DRAW_TO_DECK, transform.position);
     }
-
-
 
     public Card DrawTopCard()
     {
@@ -124,7 +118,6 @@ public class DeckManager : MonoBehaviour
         deck.Remove(cardToDraw);
         return cardToDraw;
     }
-
 
     int[] ListOfCardsToArrayOfIndex(List<Card> cards)
     {

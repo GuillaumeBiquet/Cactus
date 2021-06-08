@@ -57,3 +57,6 @@ TagManager:
   - name: Canvas
     uniqueID: 4211511691
     locked: 0
+  - name: MainCanvas
+    uniqueID: 748331093
+    locked: 0

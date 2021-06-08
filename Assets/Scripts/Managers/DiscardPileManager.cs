@@ -5,6 +5,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Linq;
 using Photon.Pun;
+using Photon.Realtime;
+using ExitGames.Client.Photon;
 
 public class DiscardPileManager : MonoBehaviour
 {
@@ -12,9 +14,11 @@ public class DiscardPileManager : MonoBehaviour
     public static DiscardPileManager Instance { get { return instance; } }
 
     List<Card> discardedCards = new List<Card>();
+    bool hasQuickDiscard = false;
     SpriteRenderer spriteRenderer;
     Sprite defaultSprite;
     public bool IsEmpty { get { return discardedCards.Count == 0; } }
+    public bool HasQuickDiscard { get { return hasQuickDiscard; } }
     public int LastCardValue { get { return discardedCards.Last().Value; } }
 
     void Awake()
@@ -44,11 +48,20 @@ public class DiscardPileManager : MonoBehaviour
 
         if(eventCode == EventCode.QUICK_DISCARD)
         {
-            discardedCards.Add(discardedCard);
-            cardController.DestroySelf();
+            if (!hasQuickDiscard)
+            {
+                hasQuickDiscard = true;
+                discardedCards.Add(discardedCard);
+                cardController.DestroySelf();
+            }
+            else
+            {
+                cardController.ReturnToPos();
+            }
         }
         else
         {
+            hasQuickDiscard = false;
             cardController.Effect();
             discardedCards.Add(discardedCard);
             cardController.DestroySelf();
@@ -81,11 +94,6 @@ public class DiscardPileManager : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (GameManager.GameState != GameState.DrawingPhase)
-        {
-            Debug.LogError("Not the drawing phase");
-            return;
-        }
 
         if (!GameManager.Instance.IsMyTurn())
         {
@@ -93,14 +101,29 @@ public class DiscardPileManager : MonoBehaviour
             return;
         }
 
-        if (discardedCards.Count == 0)
+        if(GameManager.GameState == GameState.DrawingPhase)
         {
-            Debug.LogError("Discard pile is empty");
-            return;
+            if (discardedCards.Count == 0)
+            {
+                Debug.LogError("Discard pile is empty");
+                return;
+            }
+        }
+        else if (GameManager.GameState == GameState.ReplaceCardPhase)
+        {
+            HelperManager.Instance.HideHelper();
+            DiscardCardDrawnEvent();
         }
 
-        GameManager.Instance.InstantiateCard(EventCode.DRAW_CARD_FROM_DISCARD_PILE, EventCode.DRAW_TO_DECK, transform.position);
 
     }
+
+    void DiscardCardDrawnEvent()
+    {
+        // send deck to everyone exept me (master)
+        PhotonNetwork.RaiseEvent(EventCode.DISCARD_CARD_DRAWN, null, RaiseEventOptions.Default, SendOptions.SendReliable);
+        Discard(GameManager.Instance.CardDrawn, EventCode.DISCARD_CARD_DRAWN);
+    }
+
 
 }

@@ -7,12 +7,13 @@ using UnityEngine;
 public class PlayerDisplay : MonoBehaviour
 {
     PhotonPlayer photonPlayer;
+    [SerializeField] TMP_Text playerName;
 
     public PhotonPlayer PhotonPlayer { get { return photonPlayer; } }
 
     public void SetPlayerInfo(PhotonPlayer _photonPlayer)
     {
         photonPlayer = _photonPlayer;
-        GetComponent<TMP_Text>().text = _photonPlayer.NickName;
+        playerName.text = _photonPlayer.NickName;
     }
 }
